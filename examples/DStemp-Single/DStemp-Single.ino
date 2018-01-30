@@ -16,7 +16,7 @@
 
    Connected == 0 значит датчика нет - no sensor found
    в dsMiilis хранится millis() c момента запроса или крайнего Init()
-   от dsMillis отсчитывается msConvTimeout - время потраченное на преобразование (DEBUG!)
+   от dsMillis отсчитывается TimeConv - время потраченное на преобразование (DEBUG!)
 */
 
 #include "DStemp.h"
