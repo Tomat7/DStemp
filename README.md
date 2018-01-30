@@ -25,5 +25,3 @@ For multiply sensors on PIN use DallasTemperature library!
    **_Connected_** == 0 значит датчика нет - no sensor found  
    в **_dsMiilis_** хранится millis() c момента запроса или крайней попытки инициализации  
    от **_dsMillis_** отсчитывается **_TimeConv_** - время потраченное на преобразование (DEBUG!)  
-
-If neсessary it also request temperature conversation and/or INIT sensor for 12-bit resolution.  
