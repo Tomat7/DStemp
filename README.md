@@ -8,15 +8,22 @@ For multiply sensors on PIN use DallasTemperature library!
 ---
  
 **Methods:**  
- 
-_getTemp()_ - check, update and returns temperature from OneWire sensor.  
-If neсessary it also request temperature conversation and/or INIT sensor for 12-bit resolution.  
- 
-_getTemp()_ may return:  
- 
-  -99 - sensor not found  
-  -33 - sensor was found but conversation not finished within defined timeout  
-  -22 - sensor was found but CRC error  
-  -11 - sensor was found but something going wrong  
+
+   Method check() returns NOTHING but does everything:
+   основной метод, делает всё:
+   - проверяет наличие датчика / check for sensor
+   - инициализирует его при необходимости / reinit sensor if necessary
+   - командует датчику начать преобразование температуры / start conversation
+   - получает результат от датчика / collect results
    
- _Status_ - keep Millis() of last request_for_conversation or 0 if sensor not found.  
+   Temp return current temperature OR:
+   -99  sensor not found
+   -83  sensor was found but conversation not finished within defined timeout
+   -77  sensor was found and ready but something going wrong
+   -71  sensor was found but CRC error
+
+   Connected == 0 значит датчика нет - no sensor found
+   в dsMiilis хранится millis() c момента запроса или крайнего Init()
+   от dsMillis отсчитывается msConvTimeout - время потраченное на преобразование (DEBUG!)
+
+If neсessary it also request temperature conversation and/or INIT sensor for 12-bit resolution.  
