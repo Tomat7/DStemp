@@ -16,7 +16,7 @@ For multiply sensors on PIN use DallasTemperature library!
    - командует датчику начать преобразование температуры / start conversation
    - получает результат от датчика / collect results
    
-   Temp return current temperature OR:
+   Temp return current temperature OR:  
    -99  sensor not found  
    -83  sensor was found but conversation not finished within defined timeout  
    -77  sensor was found and ready but something going wrong  
