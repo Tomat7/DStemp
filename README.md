@@ -15,7 +15,7 @@ If neсessary it also request temperature conversation and/or INIT sensor for 12
 _getTemp()_ may return:  
  
   -99 - sensor not found  
-  -55 - sensor was found but conversation not finished within defined timeout  
+  -33 - sensor was found but conversation not finished within defined timeout  
   -22 - sensor was found but CRC error  
   -11 - sensor was found but something going wrong  
    
