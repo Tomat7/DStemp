@@ -17,10 +17,10 @@ For multiply sensors on PIN use DallasTemperature library!
    - получает результат от датчика / collect results
    
    **_Temp_** return current temperature OR:  
-   -99  sensor not found  
-   -83  sensor was found but conversation not finished within defined timeout  
-   -77  sensor was found and ready but something going wrong  
-   -71  sensor was found but CRC error  
+   **-99**  sensor not found  
+   **-83**  sensor was found but conversation not finished within defined timeout  
+   **-77**  sensor was found and ready but something going wrong  
+   **-71**  sensor was found but CRC error  
 
    **_Connected_** == 0 значит датчика нет - no sensor found  
    в **_dsMiilis_** хранится millis() c момента запроса или крайней попытки инициализации  
