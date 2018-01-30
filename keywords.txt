@@ -1,0 +1,32 @@
+#######################################
+# Syntax Coloring Map For OneWire
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+OWThermometer	KEYWORD1
+DSThermometer	KEYWORD1
+DStemp			KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+getTemp	KEYWORD2
+init	KEYWORD2
+Temp	KEYWORD2
+Parasite	KEYWORD2
+Status	KEYWORD2
+check	KEYWORD2
+
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
