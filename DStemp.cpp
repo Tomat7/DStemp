@@ -1,6 +1,6 @@
 // здесь все функции
 /*
-DStemp.cpp - Library to operate with DS18B20
+DSThermometer.cpp - Library to operate with DS18B20
 Created by Tomat7, October 2017.
 */
 #include "Arduino.h"
@@ -24,7 +24,7 @@ void DSThermometer::init(uint16_t convtimeout)
 	_msConvTimeout = convtimeout;
 	initOW();
 	setHiResolution();
-	Serial.print(F(DSTEMP_VERSION));
+	Serial.print(F(LIBVERSION));
 	Serial.println(_pin);
 #ifdef DEBUG2
 	Serial.print(_temperature);
