@@ -176,3 +176,5 @@ void DSThermometer::setHiResolution()
 	if (Parasite) delay(10); // 10ms delay
 	ds.reset();
 }
+
+
