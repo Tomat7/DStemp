@@ -21,7 +21,7 @@
 #define T_ERR_SECOND -95		// вторая и финальная попытка
 #define T_ERR_NOTCONNECTED -99	// Not Connected
 
-/*
+/* !! OLD data !!
 #define T_MIN 0				// Minimal temperature by DataSheet
 #define T_ERR_CRC -11
 #define T_ERR_OTHER -22 
