@@ -10,36 +10,51 @@ Created by Tomat7, October 2017.
 
 DSThermometer::DSThermometer(uint8_t pin):ds(pin) 
 {
-	_msConvTimeout = CONVERSATIONTIME;
+	//_msConvTimeout = CONVERSATIONTIME;
 	//_ds = &ds;
 	_pin = pin;
-	Parasite = false;
-	Connected = false;
-	dsMillis = 0;
+	//Parasite = false;
+	//Connected = false;
+	//dsMillis = 0;
+}
+
+void DSThermometer::init()
+{
+	init(DS_CONVERSATION_TIME, true);
 }
 
 void DSThermometer::init(uint16_t convtimeout)
+{
+	init(convtimeout, true);
+}
+
+void DSThermometer::init(uint16_t convtimeout, bool printConfig)
 {
 	//	Serial.print("init.. ");
 	_msConvTimeout = convtimeout;
 	initOW();
 	setHiResolution();
-	Serial.print(F(LIBVERSION));
-	Serial.println(_pin);
+	//LibVersion = LIBVERSION + String(_pin) + String("|");
+	if (printConfig)
+	{
+		Serial.print(F(LIBVERSION));
+		Serial.println(_pin);
+	}
 #ifdef DEBUG2
 	Serial.print(_temperature);
 	Serial.print(" -init-stop..");
 	Serial.println(millis());
 #endif
 }
+
 /*
 check() returns NOTHING!
 only check for temperature changes from OneWire sensor
 *** NOT IN THIS VERSION!! -100 - conversation not finished yet but sensor still OK
 -99  - sensor not found
--33 - sensor was found but conversation not finished within defined timeout
--22  - sensor was found but CRC error 
--11  - sensor was found but something going wrong
+-93 - sensor was found but conversation not finished within defined timeout
+-82  - sensor was found but CRC error 
+-71  - sensor was found but something going wrong
 
 Connected == 0 значит датчика нет - no sensor found
 в dsMiilis хранится millis() c момента запроса или крайнего Init()
@@ -54,33 +69,33 @@ void DSThermometer::check()
 	if (Connected && (ds.read_bit() == 1))   // вроде готов отдать данные
 	{
 		//Serial.print("+");          
-		_temperature = askOWtemp();  // но можем ещё получить -11 или -22
-		if (_temperature >= 0)
+		_temperature = askOWtemp();  // но можем ещё получить -71 или -82
+		if (_temperature >= T_MIN)
 		{
 			Temp = _temperature;
 			TimeConv = millis() - dsMillis;
-			requestOW();           		// вроде всё ОК, значит запрашиваем снова
-			return;						// и сваливаем
+			requestOW();           	// вроде всё ОК, значит запрашиваем снова
+			return;					// и сваливаем
 		} 
-		else if (TimeConv == 0)			// значит повторный CRC error
-		{
-			Temp = _temperature;		// сообщаем горькую правду		
-		}								// дальше будет INIT и TimeConv=0
-	} 
-	else if TIMEISOUT   			// не готов отдать данные и время истекло
-	{
-		if (Connected)				//Serial.print("**");     
-		{
-			Temp = -33;					// оторвали? не успел? - косяк короче
+		else if (TimeConv == 0)		// датчик есть/был и даже отдал температуру 
+		{							// но повторно (TimeConv = 0) прошел CRC error или другая ошибка
+			Temp = _temperature;	// сообщаем горькую правду		
+		}							// дальше будет INIT и TimeConv=0 	
+	}								
+	else if TIMEISOUT   			// подключен, но время на преобразование истекло и не готов отдать данные
+	{								// или не подключен совсем 
+		if (Connected)
+		{							// датчик был
+			Temp = T_ERR_TIMEOUT;				// но оторвали на ходу или не успел - косяк короче: -93
 		} 
-		else if (_temperature > -50)   // датчика нет и пора проверить его появление
+		else if (_temperature > T_ERR_FIRST)	// датчик был, а теперь нет - темакратура осталась с предыдущего дадим еще шанс
 		{
-			_temperature = -55;			// даём еще шанс на INIT и возрождение
+			_temperature = T_ERR_SECOND;		// даём еще шанс на INIT и возрождение
 		}
 		else 
 		{
-			Temp = -99;					// пора сообщить что датчика нет
-			_temperature = -44;
+			Temp = T_ERR_NOTCONNECTED;			// пора сообщить что датчика нет: -99
+			_temperature = T_ERR_FIRST;
 		}
 	} 
 	else { return; }
@@ -111,13 +126,13 @@ float DSThermometer::askOWtemp()
 		} else
 		{
 			//Serial.print("*");
-			owTemp = -11;           // ошибка CRC, вернем -91
+			owTemp = T_ERR_CRC;           // ошибка CRC, вернем -71
 		}
 	}
 	else
 	{
-		//Serial.print("-");        // датчик есть и готов, но не отдал температуру, вернем -92,
-		owTemp = -22;             // короче, наверное такой косяк тоже может быть, надо разбираться
+		//Serial.print("-");        // датчик есть и готов, но не отдал температуру, вернем -82,
+		owTemp = T_ERR_OTHER;             // короче, наверное такой косяк тоже может быть, надо разбираться
 	}
 	return owTemp;
 }
