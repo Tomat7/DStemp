@@ -9,17 +9,16 @@
 #include "Arduino.h"
 #include <OneWire.h>
 
-#define LIBVERSION "DStemp_v20180531 on pin "
+#define LIBVERSION "DStemp_v20181015 on pin "
 #define DS_CONVERSATION_TIME 750
-#define INITATTEMPT 2
+#define DS_SET_HI_RESOLUTION
+//#define INITATTEMPT 2
 
-#define T_MIN -55				// Minimal temperature by DataSheet
-#define T_ERR_CRC -71
-#define T_ERR_OTHER -82 
-#define T_ERR_TIMEOUT -93
-#define T_ERR_FIRST -94			// первая поппытка найти пропавший датчик
-#define T_ERR_SECOND -95		// вторая и финальная попытка
-#define T_ERR_NOTCONNECTED -99	// Not Connected
+#define T_MIN -55			// Minimal temperature by DataSheet
+#define T_ERR_OTHER -59 	// sensor was found but something going wrong during conversation (rare)
+#define T_ERR_CRC -71		// sensor was found but CRC error (often)
+#define T_ERR_TIMEOUT -82	// sensor was found but conversation not finished within defined timeout (may be)
+#define T_ERR_NOSENSOR -99	// Sensor Not Connected (not found)
 
 /* !! OLD data !!
 #define T_MIN 0				// Minimal temperature by DataSheet
@@ -47,6 +46,7 @@ public:
     void init();
 	void init(uint16_t convtimeout);
 	void init(uint16_t convtimeout, bool printConfig);
+	void init(uint16_t convtimeout, bool printConfig, bool setHiRes);
     void check();
 	float Temp;
 	unsigned long dsMillis;
@@ -60,7 +60,7 @@ private:
     //OneWire *_ds;
 	OneWire ds;
 	byte _pin;
-    float _temperature;
+    //float _temperature;
     uint16_t _msConvTimeout;
     float askOWtemp();
 	void requestOW();

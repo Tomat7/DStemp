@@ -10,36 +10,36 @@ Created by Tomat7, October 2017.
 
 DSThermometer::DSThermometer(uint8_t pin):ds(pin) 
 {
-	//_msConvTimeout = CONVERSATIONTIME;
-	//_ds = &ds;
 	_pin = pin;
-	//Parasite = false;
-	//Connected = false;
-	//dsMillis = 0;
 }
 
 void DSThermometer::init()
 {
-	init(DS_CONVERSATION_TIME, true);
+	init(DS_CONVERSATION_TIME, true, true);
 }
 
 void DSThermometer::init(uint16_t convtimeout)
 {
-	init(convtimeout, true);
+	init(convtimeout, true, true);
 }
 
 void DSThermometer::init(uint16_t convtimeout, bool printConfig)
 {
+	init(convtimeout, printConfig, false);
+}
+
+void DSThermometer::init(uint16_t convtimeout, bool printConfig, bool setHiRes)
+{
 	//	Serial.print("init.. ");
 	_msConvTimeout = convtimeout;
 	initOW();
-	setHiResolution();
-	//LibVersion = LIBVERSION + String(_pin) + String("|");
+	//setHiResolution();
 	if (printConfig)
 	{
 		Serial.print(F(LIBVERSION));
 		Serial.println(_pin);
 	}
+	if (setHiRes) setHiResolution();
 #ifdef DEBUG2
 	Serial.print(_temperature);
 	Serial.print(" -init-stop..");
@@ -52,12 +52,12 @@ check() returns NOTHING!
 only check for temperature changes from OneWire sensor
 *** NOT IN THIS VERSION!! -100 - conversation not finished yet but sensor still OK
 -99  - sensor not found
--93 - sensor was found but conversation not finished within defined timeout
--82  - sensor was found but CRC error 
--71  - sensor was found but something going wrong
+-82  - sensor was found but conversation not finished within defined timeout (may be)
+-71  - sensor was found but CRC error (often)
+-59  - sensor was found but something going wrong during conversation (rare)
 
 Connected == 0 значит датчика нет - no sensor found
-в dsMiilis хранится millis() c момента запроса или крайнего Init()
+в dsMillis хранится millis() c момента запроса или крайнего Init()
 и от dsMillis отсчитывается msConvTimeout
 */
 
@@ -69,41 +69,20 @@ void DSThermometer::check()
 	if (Connected && (ds.read_bit() == 1))   // вроде готов отдать данные
 	{
 		//Serial.print("+");          
-		_temperature = askOWtemp();  // но можем ещё получить -71 или -82
-		if (_temperature >= T_MIN)
-		{
-			Temp = _temperature;
-			TimeConv = millis() - dsMillis;
-			requestOW();           	// вроде всё ОК, значит запрашиваем снова
-			return;					// и сваливаем
-		} 
-		else if (TimeConv == 0)		// датчик есть/был и даже отдал температуру 
-		{							// но повторно (TimeConv = 0) прошел CRC error или другая ошибка
-			Temp = _temperature;	// сообщаем горькую правду		
-		}							// дальше будет INIT и TimeConv=0 	
+		Temp = askOWtemp();  // но можем ещё получить -71 или -59
+		TimeConv = millis() - dsMillis;
+		requestOW();
 	}								
-	else if TIMEISOUT   			// подключен, но время на преобразование истекло и не готов отдать данные
-	{								// или не подключен совсем 
-		if (Connected)
-		{							// датчик был
-			Temp = T_ERR_TIMEOUT;				// но оторвали на ходу или не успел - косяк короче: -93
-		} 
-		else if (_temperature > T_ERR_FIRST)	// датчик был, а теперь нет - темакратура осталась с предыдущего дадим еще шанс
-		{
-			_temperature = T_ERR_SECOND;		// даём еще шанс на INIT и возрождение
-		}
-		else 
-		{
-			Temp = T_ERR_NOTCONNECTED;			// пора сообщить что датчика нет: -99
-			_temperature = T_ERR_FIRST;
-		}
+	else if TIMEISOUT  			// подключен, но время на преобразование истекло и не готов отдать данные
+	{						
+		//if (Connected) 
+		Temp = T_ERR_TIMEOUT;	// датчик был, но оторвали на ходу или не успел - косяк короче: -82
+		//else setHiResolution();
+		initOW();				// и пробуем инициализировать
+		if (Connected) requestOW();
+		else Temp = T_ERR_NOSENSOR;
 	} 
-	else { return; }
-	
-	initOW();				// и пробуем инициализировать
-	TimeConv = 0;			// ставим маячёк на будущее, но оставляем пока прежнюю T
-	if (Connected) requestOW();
-	
+		
 	return;
 }
 
@@ -131,7 +110,7 @@ float DSThermometer::askOWtemp()
 	}
 	else
 	{
-		//Serial.print("-");        // датчик есть и готов, но не отдал температуру, вернем -82,
+		//Serial.print("-");        // датчик есть и готов, но не отдал температуру, вернем -59,
 		owTemp = T_ERR_OTHER;             // короче, наверное такой косяк тоже может быть, надо разбираться
 	}
 	return owTemp;
@@ -159,15 +138,13 @@ void DSThermometer::initOW()
 	ds.reset();	
 	ds.write(0xCC);
 	ds.write(0xB4);
-	if (ds.read_bit() == 0) 
-	{ 
-		Parasite = true;
-	} else { 
-		Parasite = false; 
-	}
+	if (ds.read_bit() == 0) Parasite = true;
+	else 					Parasite = false; 
+	// --- END check for Parasite Power
 	//ds.reset_search();
 	dsMillis = millis();
-	//requestOW();
+//	if (Connected) requestOW();
+//	else Temp = T_ERR_NOSENSOR;
 #ifdef DEBUG4
 	Serial.print("initOW-stop-");
 	Serial.println(millis());
@@ -177,6 +154,7 @@ void DSThermometer::initOW()
 
 void DSThermometer::setHiResolution()
 {
+#ifdef DS_SET_HI_RESOLUTION
 	// --- Setup 12-bit resolution
 	ds.reset();
 	ds.write(0xCC);  // No address - only one DS on line
@@ -190,6 +168,7 @@ void DSThermometer::setHiResolution()
 	delay(20); 	// added 20ms delay to allow 10ms long EEPROM write operation (DallasTemperature)
 	if (Parasite) delay(10); // 10ms delay
 	ds.reset();
+#endif
 }
 
 
