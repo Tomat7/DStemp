@@ -69,18 +69,12 @@ void DSThermometer::check()
 	if (Connected && (ds.read_bit() == 1))   // вроде готов отдать данные
 	{
 		//Serial.print("+");          
-		Temp = askOWtemp();  // но можем ещё получить -71 или -59
+		Temp = askOWtemp();  	// но можем ещё получить -71 или -59
 		TimeConv = millis() - dsMillis;
-		//requestOW();
 	}								
 	else if TIMEISOUT  			// подключен, но время на преобразование истекло и не готов отдать данные
 	{						
-		//if (Connected) 
 		Temp = T_ERR_TIMEOUT;	// датчик был, но оторвали на ходу или не успел - косяк короче: -82
-		//else setHiResolution();
-		//initOW();				// и пробуем инициализировать
-		//if (Connected) requestOW();
-		//else Temp = T_ERR_NOSENSOR;
 	} 
 	else return;
 	
@@ -106,7 +100,8 @@ float DSThermometer::askOWtemp()
 		{
 			//Serial.print("+");      // типа всё хорошо!
 			owTemp = (float) ((int) bufData[0] | (((int) bufData[1]) << 8)) * 0.0625; // ХЗ откуда стащил формулу
-		} else
+		} 
+		else
 		{
 			//Serial.print("*");
 			owTemp = T_ERR_CRC;           // ошибка CRC, вернем -71
