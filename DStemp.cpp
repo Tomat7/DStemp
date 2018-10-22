@@ -71,17 +71,21 @@ void DSThermometer::check()
 		//Serial.print("+");          
 		Temp = askOWtemp();  // но можем ещё получить -71 или -59
 		TimeConv = millis() - dsMillis;
-		requestOW();
+		//requestOW();
 	}								
 	else if TIMEISOUT  			// подключен, но время на преобразование истекло и не готов отдать данные
 	{						
 		//if (Connected) 
 		Temp = T_ERR_TIMEOUT;	// датчик был, но оторвали на ходу или не успел - косяк короче: -82
 		//else setHiResolution();
-		initOW();				// и пробуем инициализировать
-		if (Connected) requestOW();
-		else Temp = T_ERR_NOSENSOR;
+		//initOW();				// и пробуем инициализировать
+		//if (Connected) requestOW();
+		//else Temp = T_ERR_NOSENSOR;
 	} 
+	else return;
+	
+	if (Temp > T_MIN) requestOW();
+	else initOW();
 		
 	return;
 }
@@ -143,8 +147,8 @@ void DSThermometer::initOW()
 	// --- END check for Parasite Power
 	//ds.reset_search();
 	dsMillis = millis();
-//	if (Connected) requestOW();
-//	else Temp = T_ERR_NOSENSOR;
+	if (Connected) requestOW();
+	else Temp = T_ERR_NOSENSOR;
 #ifdef DEBUG4
 	Serial.print("initOW-stop-");
 	Serial.println(millis());
