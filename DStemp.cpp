@@ -1,8 +1,21 @@
-// здесь все функции
 /*
 DSThermometer.cpp - Library to operate with DS18B20
-Created by Tomat7, October 2017.
+Created by Tomat7. October 2017, 2018.
 */
+/*
+check() returns NOTHING!
+only check for temperature changes from OneWire sensor
+
+-99  - sensor not found
+-82  - sensor was found but conversation not finished within defined timeout (may be)
+-71  - sensor was found but CRC error (often)
+-59  - sensor was found but something going wrong during conversation (rare)
+
+Connected == 0 значит датчика нет - no sensor found
+в dsMillis хранится millis() c момента запроса или крайнего Init()
+и от dsMillis отсчитывается msConvTimeout
+*/
+
 #include "Arduino.h"
 #include "DStemp.h"
 #include <OneWire.h>
@@ -13,7 +26,7 @@ DSThermometer::DSThermometer(uint8_t pin):ds(pin)
 	_pin = pin;
 }
 
-void DSThermometer::init()
+void DSThermometer::init() 
 {
 	init(DS_CONVERSATION_TIME, true, true);
 }
@@ -47,20 +60,6 @@ void DSThermometer::init(uint16_t convtimeout, bool printConfig, bool setHiRes)
 #endif
 }
 
-/*
-check() returns NOTHING!
-only check for temperature changes from OneWire sensor
-*** NOT IN THIS VERSION!! -100 - conversation not finished yet but sensor still OK
--99  - sensor not found
--82  - sensor was found but conversation not finished within defined timeout (may be)
--71  - sensor was found but CRC error (often)
--59  - sensor was found but something going wrong during conversation (rare)
-
-Connected == 0 значит датчика нет - no sensor found
-в dsMillis хранится millis() c момента запроса или крайнего Init()
-и от dsMillis отсчитывается msConvTimeout
-*/
-
 
 void DSThermometer::check()
 {
@@ -69,18 +68,18 @@ void DSThermometer::check()
 	if (Connected && (ds.read_bit() == 1))   // вроде готов отдать данные
 	{
 		//Serial.print("+");          
-		Temp = askOWtemp();  	// но можем ещё получить -71 или -59
+		Temp = askOWtemp();  	// можем ещё получить -71 (CRC error) или -59 (other error)
 		TimeConv = millis() - dsMillis;
 	}								
 	else if TIMEISOUT  			// подключен, но время на преобразование истекло и не готов отдать данные
-	{						
+	{	
 		Temp = T_ERR_TIMEOUT;	// датчик был, но оторвали на ходу или не успел - косяк короче: -82
 	} 
 	else return;
 	
 	if (Temp > T_MIN) requestOW();
 	else initOW();
-		
+	
 	return;
 }
 
@@ -94,9 +93,9 @@ float DSThermometer::askOWtemp()
 	if (present)
 	{
 		ds.write(0xCC);
-		ds.write(0xBE);                            // Read Scratchpad
-		ds.read_bytes(bufData, 9);                 // чтение памяти датчика, 9 байтов
-		if (OneWire::crc8(bufData, 8) == bufData[8])  // проверка CRC
+		ds.write(0xBE);                            		// Read Scratchpad
+		ds.read_bytes(bufData, 9);                 		// чтение памяти датчика, 9 байтов
+		if (OneWire::crc8(bufData, 8) == bufData[8])	// проверка CRC
 		{
 			//Serial.print("+");      // типа всё хорошо!
 			owTemp = (float) ((int) bufData[0] | (((int) bufData[1]) << 8)) * 0.0625; // ХЗ откуда стащил формулу
@@ -104,13 +103,13 @@ float DSThermometer::askOWtemp()
 		else
 		{
 			//Serial.print("*");
-			owTemp = T_ERR_CRC;           // ошибка CRC, вернем -71
+			owTemp = T_ERR_CRC;      // ошибка CRC, вернем -71
 		}
 	}
 	else
 	{
-		//Serial.print("-");        // датчик есть и готов, но не отдал температуру, вернем -59,
-		owTemp = T_ERR_OTHER;             // короче, наверное такой косяк тоже может быть, надо разбираться
+		//Serial.print("-");        // датчик был, но пропал, (не отдал температуру?) вернем -59,
+		owTemp = T_ERR_OTHER;       // наверное такой косяк тоже может быть, надо разбираться
 	}
 	return owTemp;
 }
@@ -169,5 +168,3 @@ void DSThermometer::setHiResolution()
 	ds.reset();
 #endif
 }
-
-
