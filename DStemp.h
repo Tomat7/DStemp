@@ -1,7 +1,7 @@
 /*
   DSThermometer.cpp - Library to operate with DS18B20
   Created by Tomat7, October 2017, 2018.
-  The code of setResolution() got from http://blog.asifalam.com/ds18b20-change-resolution/ (c) Asif Alam
+  The code of setResolution() from http://blog.asifalam.com/ds18b20-change-resolution/ (c) Asif Alam
 */
 #ifndef DStemp_h
 #define DStemp_h
