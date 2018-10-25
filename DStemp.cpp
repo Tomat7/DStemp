@@ -1,19 +1,19 @@
 /*
-DSThermometer.cpp - Library to operate with DS18B20
-Created by Tomat7. October 2017, 2018.
+	DSThermometer.cpp - Library to operate with DS18B20
+	Created by Tomat7. October 2017, 2018.
 */
 /*
-check() returns NOTHING!
-only check for temperature changes from OneWire sensor
-
--99  - sensor not found
--82  - sensor was found but conversation not finished within defined timeout (may be)
--71  - sensor was found but CRC error (often)
--59  - sensor was found but something going wrong during conversation (rare)
-
-Connected == 0 значит датчика нет - no sensor found
-в dsMillis хранится millis() c момента запроса или крайнего Init()
-и от dsMillis отсчитывается msConvTimeout
+	check() returns NOTHING!
+	only check for temperature changes from OneWire sensor
+	
+	-99  - sensor not found
+	-82  - sensor was found but conversation not finished within defined timeout (may be)
+	-71  - sensor was found but CRC error (often)
+	-59  - sensor was found but something going wrong during conversation (rare)
+	
+	Connected == 0 значит датчика нет - no sensor found
+	в dsMillis хранится millis() c момента запроса или крайнего Init()
+	и от dsMillis отсчитывается msConvTimeout
 */
 
 #include "Arduino.h"
@@ -28,43 +28,39 @@ DSThermometer::DSThermometer(uint8_t pin):ds(pin)
 
 void DSThermometer::init() 
 {
-	init(DS_CONVERSATION_TIME, true, true);
+	init(DS_CONVERSATION_TIME);
+	showConfig();
 }
 
 void DSThermometer::init(uint16_t convtimeout)
 {
-	init(convtimeout, true, true);
+	_msConvTimeout = convtimeout;
+	initOW();
+	#ifdef DEBUG2
+	Serial.print(" -init-finised..");
+	Serial.println(millis());
+	#endif
 }
 
+/*
 void DSThermometer::init(uint16_t convtimeout, bool printConfig)
 {
-	init(convtimeout, printConfig, false);
+	init(convtimeout, printConfig, true);
 }
 
 void DSThermometer::init(uint16_t convtimeout, bool printConfig, bool setHiRes)
 {
 	//	Serial.print("init.. ");
-	_msConvTimeout = convtimeout;
-	initOW();
-	//setHiResolution();
-	if (printConfig)
-	{
-		Serial.print(F(LIBVERSION));
-		Serial.println(_pin);
-	}
+	init(convtimeout);
+	if (printConfig) showConfig();
 	if (setHiRes) setHiResolution();
-#ifdef DEBUG2
-	Serial.print(_temperature);
-	Serial.print(" -init-stop..");
-	Serial.println(millis());
-#endif
 }
-
+*/
 
 void DSThermometer::check()
 {
-#define TIMEISOUT ((millis() - dsMillis) > _msConvTimeout)
-
+	#define TIMEISOUT ((millis() - dsMillis) > _msConvTimeout)
+	
 	if (Connected && (ds.read_bit() == 1))   // вроде готов отдать данные
 	{
 		//Serial.print("+");          
@@ -88,7 +84,7 @@ float DSThermometer::askOWtemp()
 	byte present = 0;
 	byte bufData[9]; // буфер данных
 	float owTemp;
-
+	
 	present = ds.reset();
 	if (present)
 	{
@@ -120,10 +116,10 @@ void DSThermometer::requestOW()
 	ds.write(0xCC);
 	ds.write(0x44, Parasite);
 	dsMillis = millis();
-#ifdef DEBUG3
+	#ifdef DEBUG3
 	Serial.print("reqOW-stop-");
 	Serial.println(millis());
-#endif
+	#endif
 	return;
 }
 
@@ -143,28 +139,40 @@ void DSThermometer::initOW()
 	dsMillis = millis();
 	if (Connected) requestOW();
 	else Temp = T_ERR_NOSENSOR;
-#ifdef DEBUG4
+	#ifdef DEBUG4
 	Serial.print("initOW-stop-");
 	Serial.println(millis());
-#endif
+	#endif
 	return;
 }
 
-void DSThermometer::setHiResolution()
+void DSThermometer::showConfig()
 {
-#ifdef DS_SET_HI_RESOLUTION
-	// --- Setup 12-bit resolution
+	Serial.print(F(LIBVERSION));
+	Serial.println(_pin);
+}
+
+void DSThermometer::setResolution(int res_bit)  // (c) Asif Alam's Blog http://blog.asifalam.com/ds18b20-change-resolution/
+{
+	byte reg_cmd;
+	switch (res_bit) 
+	{
+		case 9: reg_cmd = 0x1F; break;
+		case 10: reg_cmd = 0x3F; break;
+		case 11: reg_cmd = 0x5F; break;
+		case 12: reg_cmd = 0x7F; break;
+		default: reg_cmd = 0x7F; break;
+	}
 	ds.reset();
 	ds.write(0xCC);  // No address - only one DS on line
 	ds.write(0x4E);  // Write scratchpad command
 	ds.write(0);     // TL data
 	ds.write(0);     // TH data
-	ds.write(0x7F); // Configuration Register (resolution) 7F=12bits 5F=11bits 3F=10bits 1F=9bits
+	ds.write(reg_cmd); // Configuration Register (resolution) 7F=12bits 5F=11bits 3F=10bits 1F=9bits
 	ds.reset();      // This "reset" sequence is mandatory
 	ds.write(0xCC);
 	ds.write(0x48, Parasite);  // Copy Scratchpad command
 	delay(20); 	// added 20ms delay to allow 10ms long EEPROM write operation (DallasTemperature)
 	if (Parasite) delay(10); // 10ms delay
 	ds.reset();
-#endif
 }

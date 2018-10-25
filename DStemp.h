@@ -1,7 +1,7 @@
 /*
   DSThermometer.cpp - Library to operate with DS18B20
-  Created by Tomat7, October 2017.
-  Released into the public domain.
+  Created by Tomat7, October 2017, 2018.
+  The code of setResolution() got from http://blog.asifalam.com/ds18b20-change-resolution/ (c) Asif Alam
 */
 #ifndef DStemp_h
 #define DStemp_h
@@ -9,9 +9,9 @@
 #include "Arduino.h"
 #include <OneWire.h>
 
-#define LIBVERSION "DStemp_v20181015 on pin "
+#define LIBVERSION "DStemp_v20181025 on pin "
 #define DS_CONVERSATION_TIME 750
-#define DS_SET_HI_RESOLUTION
+//#define DS_SET_HI_RESOLUTION
 //#define INITATTEMPT 2
 
 #define T_MIN -55			// Minimal temperature by DataSheet
@@ -45,9 +45,12 @@ public:
 	DSThermometer(uint8_t pin);
     void init();
 	void init(uint16_t convtimeout);
-	void init(uint16_t convtimeout, bool printConfig);
-	void init(uint16_t convtimeout, bool printConfig, bool setHiRes);
-    void check();
+	//void init(uint16_t convtimeout, bool printConfig);
+	//void init(uint16_t convtimeout, bool printConfig, bool setHiRes);
+	void check();
+	void showConfig();
+	void setResolution(int res_bit);
+	
 	float Temp;
 	unsigned long dsMillis;
 	uint16_t TimeConv;
@@ -65,6 +68,5 @@ private:
     float askOWtemp();
 	void requestOW();
     void initOW();
-	void setHiResolution();
 };
 #endif
