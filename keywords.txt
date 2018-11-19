@@ -21,6 +21,7 @@ Temp	KEYWORD2
 Parasite	KEYWORD2
 Status	KEYWORD2
 check	KEYWORD2
+printConfig	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
