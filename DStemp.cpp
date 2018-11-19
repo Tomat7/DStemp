@@ -29,7 +29,8 @@ DSThermometer::DSThermometer(uint8_t pin):ds(pin)
 void DSThermometer::init() 
 {
 	init(DS_CONVERSATION_TIME);
-	showConfig();
+	printConfig();
+	setResolution(12);
 }
 
 void DSThermometer::init(uint16_t convtimeout)
@@ -42,32 +43,24 @@ void DSThermometer::init(uint16_t convtimeout)
 	#endif
 }
 
-/*
-void DSThermometer::init(uint16_t convtimeout, bool printConfig)
+void DSThermometer::control()
 {
-	init(convtimeout, printConfig, true);
+	check();
 }
-
-void DSThermometer::init(uint16_t convtimeout, bool printConfig, bool setHiRes)
-{
-	//	Serial.print("init.. ");
-	init(convtimeout);
-	if (printConfig) showConfig();
-	if (setHiRes) setHiResolution();
-}
-*/
-
+	
 void DSThermometer::check()
 {
-	#define TIMEISOUT ((millis() - dsMillis) > _msConvTimeout)
+	//#define TIMEISOUT ((millis() - dsMillis) > _msConvTimeout)
+	uint16_t msConvDuration = millis() - dsMillis;	
 	
-	if (Connected && (ds.read_bit() == 1))   // вроде готов отдать данные
+	if (Connected && (ds.read_bit() == 1))   	// вроде готов отдать данные
 	{
 		//Serial.print("+");          
 		Temp = askOWtemp();  	// можем ещё получить -71 (CRC error) или -59 (other error)
-		TimeConv = millis() - dsMillis;
+		//TimeConv = millis() - dsMillis;
+		TimeConv = msConvDuration;
 	}								
-	else if TIMEISOUT  			// подключен, но время на преобразование истекло и не готов отдать данные
+	else if (msConvDuration > _msConvTimeout)	// подключен, но время на преобразование истекло и не готов отдать данные
 	{	
 		Temp = T_ERR_TIMEOUT;	// датчик был, но оторвали на ходу или не успел - косяк короче: -82
 	} 
@@ -146,16 +139,16 @@ void DSThermometer::initOW()
 	return;
 }
 
-void DSThermometer::showConfig()
+void DSThermometer::printConfig()
 {
 	Serial.print(F(LIBVERSION));
 	Serial.println(_pin);
 }
 
-void DSThermometer::setResolution(int res_bit)  // (c) Asif Alam's Blog http://blog.asifalam.com/ds18b20-change-resolution/
+void DSThermometer::setResolution(byte resolution_bits)  // (c) Asif Alam's Blog http://blog.asifalam.com/ds18b20-change-resolution/
 {
 	byte reg_cmd;
-	switch (res_bit) 
+	switch (resolution_bits) 
 	{
 		case 9: reg_cmd = 0x1F; break;
 		case 10: reg_cmd = 0x3F; break;

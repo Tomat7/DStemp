@@ -9,7 +9,7 @@
 #include "Arduino.h"
 #include <OneWire.h>
 
-#define LIBVERSION "DStemp_v20181025 on pin "
+#define LIBVERSION "DStemp_v20181119 on pin "
 #define DS_CONVERSATION_TIME 750
 //#define DS_SET_HI_RESOLUTION
 //#define INITATTEMPT 2
@@ -48,8 +48,9 @@ public:
 	//void init(uint16_t convtimeout, bool printConfig);
 	//void init(uint16_t convtimeout, bool printConfig, bool setHiRes);
 	void check();
-	void showConfig();
-	void setResolution(int res_bit);
+	void control();
+	void printConfig();
+	void setResolution(byte res_bit);
 	
 	float Temp;
 	unsigned long dsMillis;
