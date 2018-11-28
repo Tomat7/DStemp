@@ -12,7 +12,6 @@
 #define LIBVERSION "DStemp_v20181119 on pin "
 #define DS_CONVERSATION_TIME 750
 #define HI_RESOLUTION 12
-//#define INITATTEMPT 2
 
 #define T_MIN -55			// Minimal temperature by DataSheet
 #define T_ERR_OTHER -59 	// sensor was found but something going wrong during conversation (rare)
