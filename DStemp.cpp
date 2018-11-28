@@ -30,7 +30,7 @@ void DSThermometer::init()
 {
 	init(DS_CONVERSATION_TIME);
 	printConfig();
-	setResolution(12);
+	setResolution(HI_RESOLUTION);
 }
 
 void DSThermometer::init(uint16_t convtimeout)

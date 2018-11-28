@@ -11,7 +11,7 @@
 
 #define LIBVERSION "DStemp_v20181119 on pin "
 #define DS_CONVERSATION_TIME 750
-//#define DS_SET_HI_RESOLUTION
+#define HI_RESOLUTION 12
 //#define INITATTEMPT 2
 
 #define T_MIN -55			// Minimal temperature by DataSheet
