@@ -14,7 +14,12 @@
 #include "Arduino.h"
 #include <OneWire.h>
 
+#ifdef LIBVERSION
+#undef LIBVERSION
+#endif
 #define LIBVERSION "DStemp_v20181119 on pin "
+
+
 #define DS_CONVERSATION_TIME 750
 #define HI_RESOLUTION 12
 
