@@ -48,6 +48,8 @@ public:
 	uint16_t TimeConv;
     bool Connected;   // в нем хранится millis() c момента запроса или попытки инициализации
 	bool Parasite;
+	
+	String libConfig;
 
 private:
     //OneWire *_ds;

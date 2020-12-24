@@ -39,6 +39,7 @@ void DSThermometer::init()
 void DSThermometer::init(uint16_t convtimeout)
 {
 	_msConvTimeout = convtimeout;
+	libConfig = LIBVERSION + String(_pin);
 	initOW();
 }
 
@@ -125,8 +126,9 @@ void DSThermometer::initOW()
 
 void DSThermometer::printConfig()
 {
-	Serial.print(F(LIBVERSION));
-	Serial.println(_pin);
+	Serial.println(libConfig);
+	//Serial.print(F(LIBVERSION));
+	//Serial.println(_pin);
 	return;
 }
 
