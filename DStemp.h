@@ -49,7 +49,7 @@ public:
     bool Connected;   // в нем хранится millis() c момента запроса или попытки инициализации
 	bool Parasite;
 	
-	String libConfig;
+	String LibConfig;
 
 private:
     //OneWire *_ds;
