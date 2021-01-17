@@ -17,7 +17,7 @@
 #ifdef LIBVERSION
 #undef LIBVERSION
 #endif
-#define LIBVERSION "DStemp_v20181119 on pin "
+#define LIBVERSION "DStemp_v20210117 on pin "
 
 
 #define DS_CONVERSATION_TIME 750
