@@ -23,6 +23,27 @@
 #include "DStemp.h"
 #include <OneWire.h>
 
+// Scratchpad locations. Thanks to Miles Burton <miles@mnetcs.com> for DallasTemperature library
+#define TEMP_LSB        0
+#define TEMP_MSB        1
+#define HIGH_ALARM_TEMP 2
+#define LOW_ALARM_TEMP  3
+#define CONFIGURATION   4
+#define INTERNAL_BYTE   5
+#define COUNT_REMAIN    6
+#define COUNT_PER_C     7
+#define SCRATCHPAD_CRC  8
+
+// OneWire commands
+#define STARTCONVO      0x44  // Tells device to take a temperature reading and put it on the scratchpad
+#define COPYSCRATCH     0x48  // Copy scratchpad to EEPROM
+#define READSCRATCH     0xBE  // Read from scratchpad
+#define WRITESCRATCH    0x4E  // Write to scratchpad
+#define RECALLSCRATCH   0xB8  // Recall from EEPROM to scratchpad
+#define READPOWERSUPPLY 0xB4  // Determine if device needs parasite power
+#define ONLYONEDSDEVICE 0xCC  // Only ONE sensor on wire
+
+
 
 DSThermometer::DSThermometer(uint8_t pin):ds(pin) 
 {
@@ -71,6 +92,7 @@ void DSThermometer::check()
 
 float DSThermometer::askOWtemp()
 {
+	
 	byte present = 0;
 	byte bufData[9]; // буфер данных
 	float owTemp;
@@ -78,12 +100,17 @@ float DSThermometer::askOWtemp()
 	present = ds.reset();
 	if (present)
 	{
-		ds.write(0xCC);
-		ds.write(0xBE);                            		// Read Scratchpad
+		ds.write(ONLYONEDSDEVICE);
+		ds.write(READSCRATCH);                     		// Read Scratchpad
 		ds.read_bytes(bufData, 9);                 		// чтение памяти датчика, 9 байтов
-		if (OneWire::crc8(bufData, 8) == bufData[8])	// проверка CRC
+		if (OneWire::crc8(bufData, 8) == bufData[SCRATCHPAD_CRC])	// проверка CRC
 		{
+#if defined(__AVR__)
 			owTemp = (float) ((int) bufData[0] | (((int) bufData[1]) << 8)) * 0.0625; // ХЗ откуда стащил формулу
+#elif defined(ESP32) || defined(ESP8266)
+			int16_t rawTemp = (((int16_t) bufData[TEMP_MSB]) << 11) | (((int16_t) bufData[TEMP_LSB]) << 3);
+			owTemp = (float) rawTemp * 0.0078125f;  // стащил из DallasTemperature
+#endif
 		} 
 		else
 		{
@@ -100,8 +127,8 @@ float DSThermometer::askOWtemp()
 void DSThermometer::requestOW()
 {
 	ds.reset();
-	ds.write(0xCC);
-	ds.write(0x44, Parasite);
+	ds.write(ONLYONEDSDEVICE);
+	ds.write(STARTCONVO, Parasite);
 	dsMillis = millis();
 	return;
 }
@@ -113,8 +140,8 @@ void DSThermometer::initOW()
 	Connected = (ds.search(addr));
 	// --- check for Parasite Power
 	ds.reset();	
-	ds.write(0xCC);
-	ds.write(0xB4);
+	ds.write(ONLYONEDSDEVICE);
+	ds.write(READPOWERSUPPLY);
 	if (ds.read_bit() == 0) Parasite = true;
 	else 					Parasite = false; 
 	// --- END check for Parasite Power
@@ -144,14 +171,14 @@ void DSThermometer::setResolution(byte resolution_bits)  // (c) Asif Alam's Blog
 		default: reg_cmd = 0x7F; break;
 	}
 	ds.reset();
-	ds.write(0xCC);  	// No address - only one DS on line
-	ds.write(0x4E);  	// Write scratchpad command
+	ds.write(ONLYONEDSDEVICE);  	// No address - only one DS on line
+	ds.write(WRITESCRATCH);  	// Write scratchpad command
 	ds.write(0);     	// TL data
 	ds.write(0);     	// TH data
 	ds.write(reg_cmd); 	// Configuration Register (resolution) 7F=12bits 5F=11bits 3F=10bits 1F=9bits
 	ds.reset();      	// This "reset" sequence is mandatory
-	ds.write(0xCC);
-	ds.write(0x48, Parasite);  	// Copy Scratchpad command
+	ds.write(ONLYONEDSDEVICE);
+	ds.write(COPYSCRATCH, Parasite);  	// Copy Scratchpad command
 	delay(20); 			// added 20ms delay to allow 10ms long EEPROM write operation (DallasTemperature)
 	if (Parasite) delay(10); 	// 10ms delay
 	ds.reset();
